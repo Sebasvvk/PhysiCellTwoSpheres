@@ -1,0 +1,29 @@
+#!/usr/bin/python3
+
+import subprocess;
+
+users=subprocess.check_output('squeue -O "username:14" |tail -n +2|sort|uniq',shell=True)
+userlist=users.decode().splitlines()
+print("USER          RUNNING/PENDING (REASONS)")
+for user in userlist:
+    #user=user.strip()
+    nrunning=subprocess.check_output("squeue -u {!s} -t R -O numtasks |tail -n +2".format(user),shell=True).decode().splitlines()
+    nrunning=[int(x) for x in nrunning]
+    nrunning=sum(nrunning)
+    npending=subprocess.check_output("squeue -u {!s} -t PD -O numtasks |tail -n +2".format(user),shell=True).decode().splitlines()
+    npending=[int(x) for x in npending]
+    npending=sum(npending)
+    if (npending==0): 
+        if (user=='20183964      '):
+            print('\033[94m'+"{:s}: {:d}/0".format(user,nrunning)+'\033[0m')
+        else:
+            print("{:s}: {:d}/0".format(user,nrunning))
+    else:
+        reasons=subprocess.check_output("squeue -u {!s} -t PD -O reason | tail -n +2 |sort|uniq".format(user),shell=True).decode().splitlines()
+        reasons=[x.strip() for x in reasons]
+        reasons=','.join(reasons)
+        if (user=='20183964      '):
+            print('\033[94m'+"{:s}: {:d}/{:d}\t({:s})".format(user,nrunning,npending,reasons)+'\033[0m')
+        else:
+            print("{:s}: {:d}/{:d}\t({:s})".format(user,nrunning,npending,reasons))
+
